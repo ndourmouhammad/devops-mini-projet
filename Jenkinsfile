@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     tools {
-        // Doit correspondre exactement au nom donné dans "Global Tool Configuration"
         maven 'maven-3.9'
     }
 
@@ -12,26 +11,28 @@ pipeline {
                 git url: 'https://github.com/ndourmouhammad/devops-mini-projet.git', branch: 'main'
             }
         }
-        stage('Build') {
+
+        stage('Build & Test') {
             steps {
-                // 'mvn' sera maintenant reconnu grâce au bloc 'tools'
-                sh 'mvn clean package'
+                // 'verify' exécute les tests ET génère le rapport JaCoCo
+                sh 'mvn clean verify'
             }
         }
-        stage('Docker Build') {
-            steps {
-                // Prochaine étape : construire l'image après le succès de Maven
-                sh 'docker build -t devops-mini-app .'
-            }
-        }
+
         stage('SonarQube Analysis') {
             steps {
-                // Remplacez 'mon-sonar' par le nom exact configuré dans Jenkins
+                // Utilise la config 'SonarQube' liée à votre IP 10.154.114.174
                 withSonarQubeEnv('SonarQube') {
                     sh 'mvn sonar:sonar'
                 }
             }
         }
 
+        stage('Docker Build') {
+            steps {
+                // On construit l'image seulement si les tests et Sonar sont OK
+                sh 'docker build -t devops-mini-app .'
+            }
+        }
     }
 }
