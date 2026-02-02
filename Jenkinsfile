@@ -24,5 +24,13 @@ pipeline {
                 sh 'docker build -t devops-mini-app .'
             }
         }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('mon-sonar') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
     }
 }
