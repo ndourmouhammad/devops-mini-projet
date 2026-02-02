@@ -35,18 +35,21 @@ pipeline {
             }
         }
         stage('Deploy to Nexus') {
-                    steps {
-                        // Vérifiez bien que l'ID est 'nexus-credentials' ou 'nexus-auth' selon ce que vous avez créé
-                        withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
-                                         passwordVariable: 'NEXUS_PWD',
-                                         usernameVariable: 'NEXUS_USER')]) {
-                            sh "echo '<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"><servers><server><id>nexus-releases</id><username>${NEXUS_USER}</username><password>${NEXUS_PWD}</password></server></servers></settings>' > tmp_settings.xml"
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
+                                 passwordVariable: 'NEXUS_PWD',
+                                 usernameVariable: 'NEXUS_USER')]) {
+                    // Utilisation de guillemets doubles et une seule ligne pour éviter les parasites
+                    sh "echo '<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"><servers><server><id>nexus-releases</id><username>${NEXUS_USER}</username><password>${NEXUS_PWD}</password></server></servers></settings>' > tmp_settings.xml"
 
-                            sh 'mvn deploy -s tmp_settings.xml -DskipTests'
+                    // Vérification du fichier dans les logs pour être sûr
+                    sh "cat tmp_settings.xml"
 
-                            sh 'rm tmp_settings.xml'
-                        }
-                    }
+                    sh "mvn deploy -s tmp_settings.xml -DskipTests"
+
+                    sh "rm tmp_settings.xml"
                 }
+            }
+        }
     }
 }
