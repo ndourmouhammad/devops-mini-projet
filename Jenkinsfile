@@ -35,20 +35,18 @@ pipeline {
             }
         }
         stage('Deploy to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
-                                 passwordVariable: 'NEXUS_PWD',
-                                 usernameVariable: 'NEXUS_USER')]) {
-                    sh """
-                    # On génère le fichier sans aucune indentation parasite
-                    echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"><servers><server><id>nexus-releases</id><username>${NEXUS_USER}</username><password>${NEXUS_PWD}</password></server></servers></settings>' > tmp_settings.xml
-                    """
+                    steps {
+                        // Vérifiez bien que l'ID est 'nexus-credentials' ou 'nexus-auth' selon ce que vous avez créé
+                        withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
+                                         passwordVariable: 'NEXUS_PWD',
+                                         usernameVariable: 'NEXUS_USER')]) {
+                            sh "echo '<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"><servers><server><id>nexus-releases</id><username>${NEXUS_USER}</username><password>${NEXUS_PWD}</password></server></servers></settings>' > tmp_settings.xml"
 
-                    sh 'mvn deploy -s tmp_settings.xml -DskipTests'
+                            sh 'mvn deploy -s tmp_settings.xml -DskipTests'
 
-                    sh 'rm tmp_settings.xml'
+                            sh 'rm tmp_settings.xml'
+                        }
+                    }
                 }
-            }
-        }
     }
 }
