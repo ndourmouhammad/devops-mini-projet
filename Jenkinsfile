@@ -35,21 +35,35 @@ pipeline {
             }
         }
         stage('Deploy to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
-                                 passwordVariable: 'NEXUS_PWD',
-                                 usernameVariable: 'NEXUS_USER')]) {
-                    // Utilisation de guillemets doubles et une seule ligne pour éviter les parasites
-                    sh "echo '<settings xmlns=\"http://maven.apache.org/SETTINGS/1.0.0\"><servers><server><id>nexus-releases</id><username>${NEXUS_USER}</username><password>${NEXUS_PWD}</password></server></servers></settings>' > tmp_settings.xml"
+                    steps {
+                        withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
+                                         passwordVariable: 'NEXUS_PWD',
+                                         usernameVariable: 'NEXUS_USER')]) {
+                            script {
+                                // On crée le contenu XML proprement dans une variable
+                                def settingsContent = """
+                                <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+                                    <servers>
+                                        <server>
+                                            <id>nexus-releases</id>
+                                            <username>${NEXUS_USER}</username>
+                                            <password>${NEXUS_PWD}</password>
+                                        </server>
+                                    </servers>
+                                </settings>
+                                """.trim()
 
-                    // Vérification du fichier dans les logs pour être sûr
-                    sh "cat tmp_settings.xml"
+                                // On écrit le fichier directement sur le disque
+                                writeFile file: 'tmp_settings.xml', text: settingsContent
+                            }
 
-                    sh "mvn deploy -s tmp_settings.xml -DskipTests"
+                            // On lance le déploiement
+                            sh 'mvn deploy -s tmp_settings.xml -DskipTests'
 
-                    sh "rm tmp_settings.xml"
+                            // Nettoyage
+                            sh 'rm tmp_settings.xml'
+                        }
+                    }
                 }
-            }
-        }
     }
 }
