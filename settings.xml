@@ -1,0 +1,9 @@
+<settings>
+    <servers>
+        <server>
+            <id>nexus-releases</id>
+            <username>admin</username>
+            <password>votre_pass_nexus</password>
+        </server>
+    </servers>
+</settings>

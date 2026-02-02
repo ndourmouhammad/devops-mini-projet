@@ -34,5 +34,33 @@ pipeline {
                 sh 'docker build -t devops-mini-app .'
             }
         }
+        stage('Deploy to Nexus') {
+            steps {
+                // Jenkins récupère le login/pass de l'ID 'nexus-auth'
+                withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
+                                 passwordVariable: 'NEXUS_PWD',
+                                 usernameVariable: 'NEXUS_USER')]) {
+
+                    // On crée un settings.xml temporaire uniquement pour cette commande
+                    sh """
+                    echo '<settings>
+                            <servers>
+                                <server>
+                                    <id>nexus-releases</id>
+                                    <username>${NEXUS_USER}</username>
+                                    <password>${NEXUS_PWD}</password>
+                                </server>
+                            </servers>
+                          </settings>' > tmp_settings.xml
+                    """
+
+                    // On déploie en utilisant ce fichier temporaire
+                    sh 'mvn deploy -s tmp_settings.xml -DskipTests'
+
+                    // Sécurité : on supprime le fichier après usage
+                    sh 'rm tmp_settings.xml'
+                }
+            }
+        }
     }
 }
