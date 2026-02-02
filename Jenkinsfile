@@ -39,23 +39,13 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'nexus-credentials',
                                  passwordVariable: 'NEXUS_PWD',
                                  usernameVariable: 'NEXUS_USER')]) {
-
-                    // Utilisation de guillemets simples pour empêcher l'interprétation par Groovy
-                    sh '''
-                    cat <<EOF > tmp_settings.xml
-        <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
-            <servers>
-                <server>
-                    <id>nexus-releases</id>
-                    <username>''' + NEXUS_USER + '''</username>
-                    <password>''' + NEXUS_PWD + '''</password>
-                </server>
-            </servers>
-        </settings>
-        EOF
-                    '''
+                    sh """
+                    # On génère le fichier sans aucune indentation parasite
+                    echo '<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"><servers><server><id>nexus-releases</id><username>${NEXUS_USER}</username><password>${NEXUS_PWD}</password></server></servers></settings>' > tmp_settings.xml
+                    """
 
                     sh 'mvn deploy -s tmp_settings.xml -DskipTests'
+
                     sh 'rm tmp_settings.xml'
                 }
             }
